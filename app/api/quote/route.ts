@@ -1,8 +1,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { zoneMultiplier } from '@/lib/utils';
+import { zoneMultiplier } from '../../../lib/utils';
 
-const BASE = 100; // $1 per pixel block unit (10x10) -> 100 cents per grid unit area
+const BASE = 100; // $1 per grid unit (10x10) -> 100 cents
 
 export async function POST(req: NextRequest) {
   const { x, y, w, h } = await req.json();

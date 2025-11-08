@@ -25,9 +25,12 @@ export default function BlockModal({ block, onClose }: { block: Block | null, on
               <span className="badge">Size: {block.w}×{block.h}</span>
               <span className="badge">Pos: {block.x},{block.y}</span>
             </div>
-            {block.href && (
-              <a className="button mt-3" href={block.href} target="_blank" rel="noreferrer">Visit</a>
-            )}
+            <div className="mt-3 flex gap-2">
+              {block.href && (
+                <a className="button" href={block.href} target="_blank" rel="noreferrer">Visit</a>
+              )}
+              <a className="button" href={`/b/${block.id}`}>Public page</a>
+            </div>
           </div>
         </div>
         <div className="mt-4 flex justify-between">

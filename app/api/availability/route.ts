@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { blocks } from '@/lib/data';
-import { isOverlapping } from '@/lib/geometry';
+import { blocks } from '../../../lib/data';
+import { isOverlapping } from '../../../lib/geometry';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();

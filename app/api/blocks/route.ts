@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { blocks } from '@/lib/data';
+import { blocks } from '../../../lib/data';
 
 export async function GET(req: NextRequest) {
   const status = req.nextUrl.searchParams.get('status') || 'all';

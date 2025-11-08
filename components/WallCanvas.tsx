@@ -3,9 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Block } from '@/lib/types';
 import BlockView from './Block';
-import { clamp, px } from '@/lib/utils';
-
-const GRID_UNITS = 100; // 1000/10
+import { clamp } from '@/lib/utils';
+import { useAppStore } from '@/lib/store';
 
 export default function WallCanvas({
   blocks,
@@ -21,6 +20,8 @@ export default function WallCanvas({
   const [showAvailability, setShowAvailability] = useState(true);
   const last = useRef<{x:number,y:number}|null>(null);
   const containerRef = useRef<HTMLDivElement|null>(null);
+  const focusId = useAppStore(s=>s.focusId);
+  const setFocusId = useAppStore(s=>s.setFocusId);
 
   const worldPx = 1000; // virtual px
   const viewStyle: React.CSSProperties = useMemo(()=> ({
@@ -37,6 +38,24 @@ export default function WallCanvas({
     fitToViewport();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
+
+  useEffect(()=>{
+    if (!focusId) return;
+    const b = blocks.find(x=>x.id===focusId);
+    if (!b || !containerRef.current) return;
+    const el = containerRef.current;
+    const cx = el.clientWidth/2;
+    const cy = el.clientHeight/2;
+    const wx = b.x*10 + (b.w*10)/2;
+    const wy = b.y*10 + (b.h*10)/2;
+    const desiredScale = Math.min(5, Math.max(0.4, Math.min(el.clientWidth/(b.w*10*2), el.clientHeight/(b.h*10*2))));
+    const ntx = cx - wx * desiredScale;
+    const nty = cy - wy * desiredScale;
+    setScale(desiredScale);
+    setTx(ntx);
+    setTy(nty);
+    setFocusId(null);
+  },[focusId, blocks, setFocusId]);
 
   function fitToViewport() {
     const el = containerRef.current;
@@ -106,7 +125,7 @@ export default function WallCanvas({
           <input type="checkbox" checked={showAvailability} onChange={e=>setShowAvailability(e.target.checked)} aria-label="Show availability"/>
           <span className="text-sm">Show availability</span>
         </label>
-        <a id="reserve-btn" href="#reserve" className="button" onClick={(e)=>{e.preventDefault(); alert('Select a free spot then click “Reserve this space” in the modal. (Mock)')}}>Reserve</a>
+        <a id="reserve-btn" href="#reserve" className="button" onClick={(e)=>{e.preventDefault(); document.dispatchEvent(new CustomEvent('open-reserve-modal'));}}>Reserve</a>
       </div>
 
       <div

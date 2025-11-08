@@ -3,7 +3,7 @@ export default function TopBanner() {
   return (
     <header className="w-full border-b border-black bg-brandYellow">
       <div className="mx-auto max-w-7xl px-3 py-2">
-        <h1 className="text-center text-2xl md:text-3xl font-bold">
+        <h1 className="text-center text-2xl md:text-3xl font-bold leading-tight">
           Brand Space™ – 1,000,000 pixels – $1 per pixel – Reserve your name worldwide!
         </h1>
         <nav className="retro-menu mt-2 text-center text-sm md:text-base">

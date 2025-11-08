@@ -71,3 +71,12 @@ Base formula: `base=100` cents per grid unit (10×10).
 - Ready for Vercel/Netlify.
 
 © 2025 Brand Space – All Rights Reserved.
+
+
+
+## Added in this update
+- Public block page `/b/[id]` with OG tags.
+- Reservation flow with size presets, availability check, quote, and mock checkout.
+- Directory click now **focuses** and zooms the wall to the selected block.
+- Mobile-friendly collapsible search panel.
+- Relative imports in API routes for Vercel serverless reliability.
