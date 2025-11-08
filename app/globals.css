@@ -1,0 +1,36 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Retro 2000s banner + menu vibes */
+:root { color-scheme: light only; }
+
+body {
+  @apply bg-brandYellow text-black;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+a { @apply underline; }
+
+.retro-menu a {
+  @apply no-underline text-blue-700 hover:underline;
+}
+
+.wall-scroll {
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.button {
+  @apply inline-flex items-center justify-center rounded-md border border-black px-3 py-1 bg-white hover:bg-gray-100 active:translate-y-[1px];
+}
+
+.badge {
+  @apply text-[10px] uppercase tracking-wide px-2 py-0.5 rounded border border-black bg-white;
+}
+
+.focus-outline:focus {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
