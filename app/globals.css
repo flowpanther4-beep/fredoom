@@ -3,7 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Retro 2000s banner + menu vibes */
+/* Retro 2000s banner + menu vibes with modern polish */
 :root { color-scheme: light only; }
 
 body {
@@ -17,11 +17,24 @@ a { @apply underline; }
   @apply no-underline text-blue-700 hover:underline;
 }
 
+/* Stage: framed container for the wall */
+.stage {
+  @apply relative mx-auto my-4 md:my-6 max-w-[1200px];
+  background: radial-gradient(1000px 600px at 50% 0%, rgba(255,255,255,0.55), rgba(255,235,59,0));
+}
+
+/* The framed board look */
+.board {
+  @apply bg-white border-2 border-black rounded-xl shadow-[8px_8px_0px_#000];
+}
+
+/* Grid scrolling area */
 .wall-scroll {
   overscroll-behavior: none;
   touch-action: none;
 }
 
+/* Buttons + badges */
 .button {
   @apply inline-flex items-center justify-center rounded-md border border-black px-3 py-1 bg-white hover:bg-gray-100 active:translate-y-[1px];
 }
@@ -33,4 +46,26 @@ a { @apply underline; }
 .focus-outline:focus {
   outline: 2px solid #000;
   outline-offset: 2px;
+}
+
+/* Available block visuals */
+.available-stripes {
+  background-image: repeating-linear-gradient(135deg, rgba(255,255,0,0.35) 0px, rgba(255,255,0,0.35) 6px, transparent 6px, transparent 12px);
+}
+
+.ribbon {
+  position: absolute;
+  top: 0; left: 0;
+  background: #22c55e; /* green */
+  color: #000;
+  font-weight: 700;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-bottom-right-radius: 6px;
+  border: 1px solid #000;
+}
+
+.block-card {
+  @apply rounded-md;
+  box-shadow: 2px 2px 0 #000;
 }

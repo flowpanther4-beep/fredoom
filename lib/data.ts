@@ -38,7 +38,7 @@ for (let i=0;i<150;i++) {
         title: `Brand ${i+1}`,
         text: i % 3 === 0 ? "Great product & services" : undefined,
         href: "https://example.com",
-        img_url: (i % 5 === 0) ? `https://placehold.co/${w*10}x${h*10}/png?text=B${i+1}` : undefined,
+        img_url: (i % 2 === 0) ? `https://placehold.co/${w*10}x${h*10}/png?text=Brand+${i+1}` : undefined,
         theme_bg: colors[rand(0, colors.length-1)],
         theme_fg: fg,
         status: (["reserved","paid","approved"] as const)[rand(0,2)],

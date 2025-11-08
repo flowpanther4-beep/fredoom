@@ -40,7 +40,7 @@ export default function SearchPanel({
   const kindOptions = ['brand','name','profile','ad'] as const;
 
   return (
-    <aside className={"w-full md:w-80 border-l border-black bg-white "+(open?'':'h-12 overflow-hidden')}>
+    <aside className={"w-full md:w-80 border-l border-black bg-white md:rounded-l-xl "+(open?'':'h-12 overflow-hidden')}>
       <div className="flex items-center justify-between p-2 md:p-3">
         <div className="font-bold">Search</div>
         <button className="button md:hidden" onClick={()=>setOpen(o=>!o)}>{open?'Hide':'Show'}</button>
@@ -68,7 +68,7 @@ export default function SearchPanel({
         </div>
         <div id="directory" className="mt-3">
           <div className="text-sm font-bold mb-1">Directory ({filtered.length})</div>
-          <ul className="max-h-[50vh] overflow-auto border border-black">
+          <ul className="max-h-[50vh] overflow-auto border border-black rounded-md">
             {filtered.map(b=>(
               <li key={b.id} className="p-2 border-b border-black/20 hover:bg-yellow-100 cursor-pointer focus-outline" tabIndex={0} onClick={()=>onFocusBlock(b.id)} onKeyDown={(e)=>{if(e.key==='Enter') onFocusBlock(b.id);}}>
                 <div className="text-sm font-bold">{b.title}</div>

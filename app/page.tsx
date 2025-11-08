@@ -12,6 +12,7 @@ import { useAppStore } from "@/lib/store";
 export default function Page() {
   const [active, setActive] = useState<Block | null>(null);
   const { blocks, setBlocks, setFocusId } = useAppStore();
+  const [reserveOpen, setReserveOpen] = useState(false);
 
   useEffect(()=>{
     fetch('/api/blocks?status=all').then(r=>r.json()).then(setBlocks);
@@ -28,8 +29,6 @@ export default function Page() {
     const b = blocks.find(x=>x.id===id);
     if (b) setActive(b);
   },[blocks, setFocusId]);
-
-  const [reserveOpen, setReserveOpen] = useState(false);
 
   return (
     <main className="min-h-screen flex flex-col">

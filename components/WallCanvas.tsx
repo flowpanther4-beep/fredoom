@@ -6,6 +6,8 @@ import BlockView from './Block';
 import { clamp } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 
+type Rect = { x:number; y:number; w:number; h:number };
+
 export default function WallCanvas({
   blocks,
   onSelectBlock
@@ -23,6 +25,9 @@ export default function WallCanvas({
   const focusId = useAppStore(s=>s.focusId);
   const setFocusId = useAppStore(s=>s.setFocusId);
 
+  const [dragStart, setDragStart] = useState<{x:number,y:number}|null>(null);
+  const [selection, setSelection] = useState<Rect|null>(null);
+
   const worldPx = 1000; // virtual px
   const viewStyle: React.CSSProperties = useMemo(()=> ({
     width: worldPx,
@@ -31,8 +36,9 @@ export default function WallCanvas({
     backgroundSize: "10px 10px, 10px 10px",
     transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
     transformOrigin: "0 0",
-    position: "relative" as const
-  }), [scale, tx, ty]);
+    position: "relative" as const,
+    cursor: dragStart ? 'crosshair' : 'default'
+  }), [scale, tx, ty, dragStart]);
 
   useEffect(()=>{
     fitToViewport();
@@ -48,7 +54,7 @@ export default function WallCanvas({
     const cy = el.clientHeight/2;
     const wx = b.x*10 + (b.w*10)/2;
     const wy = b.y*10 + (b.h*10)/2;
-    const desiredScale = Math.min(5, Math.max(0.4, Math.min(el.clientWidth/(b.w*10*2), el.clientHeight/(b.h*10*2))));
+    const desiredScale = Math.min(5, Math.max(0.5, Math.min(el.clientWidth/(b.w*10*2), el.clientHeight/(b.h*10*2))));
     const ntx = cx - wx * desiredScale;
     const nty = cy - wy * desiredScale;
     setScale(desiredScale);
@@ -61,11 +67,21 @@ export default function WallCanvas({
     const el = containerRef.current;
     if (!el) return;
     const min = Math.min(el.clientWidth, el.clientHeight);
-    const s = clamp(min / worldPx, 0.2, 5);
+    const s = clamp(min / worldPx, 0.3, 5);
     setScale(s);
     setTx((el.clientWidth - worldPx * s) / 2);
     setTy((el.clientHeight - worldPx * s) / 2);
   }
+
+  function toWorld(clientX:number, clientY:number){
+    const rect = (containerRef.current as HTMLDivElement).getBoundingClientRect();
+    const cx = clientX - rect.left;
+    const cy = clientY - rect.top;
+    const wx = (cx - tx) / scale;
+    const wy = (cy - ty) / scale;
+    return { wx, wy };
+  }
+  function snapGrid(v:number){ return Math.max(0, Math.min(100, Math.round(v/10))) } // 10px grid → 0..100
 
   function onWheel(e: React.WheelEvent) {
     e.preventDefault();
@@ -84,10 +100,27 @@ export default function WallCanvas({
   }
 
   function onMouseDown(e: React.MouseEvent) {
-    setPanning(true);
-    last.current = { x: e.clientX, y: e.clientY };
+    if (e.shiftKey) {
+      // start selection
+      const { wx, wy } = toWorld(e.clientX, e.clientY);
+      setDragStart({ x: snapGrid(wx), y: snapGrid(wy) });
+      setSelection({ x: snapGrid(wx), y: snapGrid(wy), w: 0, h: 0 });
+    } else {
+      setPanning(true);
+      last.current = { x: e.clientX, y: e.clientY };
+    }
   }
   function onMouseMove(e: React.MouseEvent) {
+    if (dragStart) {
+      const { wx, wy } = toWorld(e.clientX, e.clientY);
+      const x2 = snapGrid(wx), y2 = snapGrid(wy);
+      const x = Math.min(dragStart.x, x2);
+      const y = Math.min(dragStart.y, y2);
+      const w = Math.abs(x2 - dragStart.x);
+      const h = Math.abs(y2 - dragStart.y);
+      setSelection({ x, y, w, h });
+      return;
+    }
     if (!panning || !last.current) return;
     const dx = e.clientX - last.current.x;
     const dy = e.clientY - last.current.y;
@@ -95,7 +128,19 @@ export default function WallCanvas({
     setTy(ty + dy);
     last.current = { x: e.clientX, y: e.clientY };
   }
-  function onMouseUp() { setPanning(false); last.current = null; }
+  function onMouseUp(e: React.MouseEvent) {
+    if (dragStart) {
+      const rect = selection;
+      setDragStart(null);
+      if (rect && rect.w>0 && rect.h>0) {
+        // Open reserve modal with the selection
+        document.dispatchEvent(new CustomEvent('open-reserve-modal', { detail: { draft: { x: rect.x, y: rect.y, w: rect.w, h: rect.h, kind: 'brand', title: '', theme_bg:'#ffffff', theme_fg:'#000000' }}}));
+      }
+      return;
+    }
+    setPanning(false);
+    last.current = null;
+  }
 
   function onTouchStart(e: React.TouchEvent) {
     if (e.touches.length === 1) {
@@ -116,34 +161,47 @@ export default function WallCanvas({
   function center() { fitToViewport(); }
 
   return (
-    <div className="relative flex-1 border-t border-black bg-brandYellow">
-      <div className="absolute z-10 left-2 top-2 flex gap-2">
-        <button className="button" aria-label="Zoom in" onClick={()=>setScale(s=>clamp(s*1.1, 0.2, 5))}>＋</button>
-        <button className="button" aria-label="Zoom out" onClick={()=>setScale(s=>clamp(s/1.1, 0.2, 5))}>－</button>
-        <button className="button" aria-label="Center" onClick={center}>Center</button>
-        <label className="inline-flex items-center gap-2 border border-black bg-white px-2">
-          <input type="checkbox" checked={showAvailability} onChange={e=>setShowAvailability(e.target.checked)} aria-label="Show availability"/>
-          <span className="text-sm">Show availability</span>
-        </label>
-        <a id="reserve-btn" href="#reserve" className="button" onClick={(e)=>{e.preventDefault(); document.dispatchEvent(new CustomEvent('open-reserve-modal'));}}>Reserve</a>
-      </div>
+    <div className="stage flex-1">
+      <div className="board relative">
+        <div className="absolute z-10 left-2 top-2 flex gap-2 m-2">
+          <button className="button" aria-label="Zoom in" onClick={()=>setScale(s=>clamp(s*1.1, 0.2, 5))}>＋</button>
+          <button className="button" aria-label="Zoom out" onClick={()=>setScale(s=>clamp(s/1.1, 0.2, 5))}>－</button>
+          <button className="button" aria-label="Center" onClick={center}>Center</button>
+          <label className="inline-flex items-center gap-2 border border-black bg-white px-2">
+            <input type="checkbox" checked={showAvailability} onChange={e=>setShowAvailability(e.target.checked)} aria-label="Show availability"/>
+            <span className="text-sm">Show availability</span>
+          </label>
+          <a id="reserve-btn" href="#reserve" className="button" onClick={(e)=>{e.preventDefault(); document.dispatchEvent(new CustomEvent('open-reserve-modal', { detail: { draft: null }}));}}>Reserve</a>
+          <span className="hidden md:inline text-xs ml-2 bg-white border border-black px-2 py-1 rounded">Tip: Hold <b>Shift</b> and drag on the wall to select your space</span>
+        </div>
 
-      <div
-        ref={containerRef}
-        className="absolute inset-0 overflow-hidden wall-scroll"
-        onWheel={onWheel}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseUp}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
-        <div aria-label="Brand Space Wall" className="border border-black bg-white" style={viewStyle}>
-          {blocks.map(b => (
-            <BlockView key={b.id} b={b} showAvailability={showAvailability} onClick={onSelectBlock}/>
-          ))}
+        <div
+          ref={containerRef}
+          className="relative h-[70vh] md:h-[78vh] rounded-xl overflow-hidden wall-scroll"
+          onWheel={onWheel}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
+          onMouseLeave={onMouseUp}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          <div aria-label="Brand Space Wall" className="border border-black bg-white" style={viewStyle}>
+            {blocks.map(b => (
+              <BlockView key={b.id} b={b} showAvailability={showAvailability} onClick={onSelectBlock}/>
+            ))}
+
+            {selection && (
+              <div
+                className="absolute border-2 border-dashed"
+                style={{
+                  left: selection.x*10, top: selection.y*10, width: selection.w*10, height: selection.h*10,
+                  background: 'rgba(34,197,94,0.2)', borderColor: '#16a34a'
+                }}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

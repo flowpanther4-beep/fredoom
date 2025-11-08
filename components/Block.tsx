@@ -1,7 +1,8 @@
 
 'use client';
 import type { Block } from '@/lib/types';
-import { px } from '@/lib/utils';
+
+function px(n:number){ return `${n*10}px`; }
 
 export default function BlockView({ b, showAvailability, onClick }:{ b: Block; showAvailability: boolean; onClick: (b: Block)=>void }) {
   const isAvailable = b.status === 'available';
@@ -12,32 +13,44 @@ export default function BlockView({ b, showAvailability, onClick }:{ b: Block; s
     height: px(b.h),
     background: b.theme_bg || (isAvailable ? '#ffffff' : '#ddd'),
     color: b.theme_fg || '#000',
-    border: isAvailable ? '2px dashed #000' : '1px solid #000',
+    border: '1px solid #000',
   };
+
+  const title = b.title || (isAvailable ? 'AVAILABLE NOW' : '—');
 
   return (
     <div
       role="button"
-      aria-label={`${b.title} block`}
+      aria-label={`${title} block`}
       tabIndex={0}
-      className={"absolute overflow-hidden select-none cursor-pointer " + (isAvailable ? "animate-pulseGlow" : "")}
+      className={"absolute overflow-hidden select-none cursor-pointer block-card " + (isAvailable ? "animate-pulseGlow available-stripes" : "")}
       style={style}
       onClick={()=>onClick(b)}
       onKeyDown={(e)=>{ if(e.key==='Enter') onClick(b); }}
-      title={b.title}
+      title={title}
     >
-      {b.img_url
-        ? <img src={b.img_url} alt={b.title} className="w-full h-full object-cover" />
-        : <div className="w-full h-full grid place-items-center text-[10px] md:text-xs font-bold drop-shadow">{b.title}</div>
-      }
-      {showAvailability && (
-        <div className={"absolute inset-0 "+(isAvailable ? "bg-green-400/30":"bg-red-400/30")} aria-hidden="true"></div>
-      )}
-      {isAvailable && (
-        <div className="absolute bottom-1 inset-x-1 text-center text-[9px] md:text-xs font-bold">
-          {b.title}
+      {/* Content */}
+      {b.img_url && b.status !== 'available' ? (
+        <img src={b.img_url} alt={title} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full grid place-items-center text-[10px] md:text-xs font-bold text-center px-1 drop-shadow">
+          <div className="leading-tight">
+            {title}
+          </div>
+          {isAvailable && (
+            <div className="text-[9px] md:text-[11px] font-bold mt-0.5">
+              RESERVE YOUR NAME • LOGO
+            </div>
+          )}
         </div>
       )}
+
+      {/* Availability overlays */}
+      {showAvailability && (
+        <div className={"absolute inset-0 pointer-events-none "+(isAvailable ? "bg-green-300/20":"bg-red-300/20")} aria-hidden="true"></div>
+      )}
+
+      {isAvailable && <span className="ribbon">AVAILABLE</span>}
     </div>
   );
 }

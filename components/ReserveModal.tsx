@@ -15,17 +15,28 @@ const PRESETS = [
   {label: '20×10', w:20, h:10},
 ];
 
+const DEFAULT_DRAFT: BlockDraft = {
+  x: 10, y: 10, w: 6, h: 4, kind: 'brand', title: '', text: '', href: '', img_url: '', theme_bg:'#ffffff', theme_fg:'#000000', category:'other'
+};
+
 export default function ReserveModal({ open, onClose }: Props) {
-  const [draft, setDraft] = useState<BlockDraft>({
-    x: 10, y: 10, w: 6, h: 4, kind: 'brand', title: '', text: '', href: '', img_url: '', theme_bg:'#ffffff', theme_fg:'#000000', category:'other'
-  });
+  const [draft, setDraft] = useState<BlockDraft>(DEFAULT_DRAFT);
   const [available, setAvailable] = useState<boolean|null>(null);
   const [quote, setQuote] = useState<QuoteResponse| null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(()=>{
+    function handler(e: any){
+      const d = e?.detail?.draft;
+      setDraft(d ? { ...DEFAULT_DRAFT, ...d } : DEFAULT_DRAFT);
+      setAvailable(null); setQuote(null);
+    }
+    document.addEventListener('open-reserve-modal', handler as any);
+    return ()=>document.removeEventListener('open-reserve-modal', handler as any);
+  },[]);
+
+  useEffect(()=>{
     if (!open) return;
-    // reset
     setAvailable(null); setQuote(null);
   },[open]);
 
@@ -126,9 +137,9 @@ export default function ReserveModal({ open, onClose }: Props) {
             <div className="mt-2 flex gap-2">
               <button className="button" onClick={checkAvailability} disabled={loading}>Check availability</button>
               <button className="button" onClick={getQuote} disabled={loading}>Get quote</button>
-              <button className="button" onClick={checkout} disabled={!available || !quote || loading}>Reserve (Checkout)</button>
+              <button className="button" onClick={checkout} disabled={loading || draft.title.trim()===''}>Reserve (Checkout)</button>
             </div>
-            <div className="text-sm mt-2">
+            <div className="text-sm mt-2 min-h-[1.5rem]">
               {available===true && <span className="text-green-700 font-bold">Available ✓</span>}
               {available===false && <span className="text-red-700 font-bold">Conflicts detected ✗</span>}
               {quote && <span className="ml-3">Quote: ${(quote.price_cents/100).toFixed(2)} USD</span>}
